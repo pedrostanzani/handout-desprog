@@ -23,10 +23,7 @@ Se quiser entender porque alguém iria querer fazer operações entre 2 números
 
 Mas não se preocupe: esse não é o foco da nossa aula.
 
-::: Gabarito
-Este é um exemplo de gabarito, entre `md :::`.
-:::
-
+::: Ler sobre aplicações
 Quando falamos em números excessivamente extensos, a primeira área que deve vir à sua mente é a criptografia.
 
 Espeficamente falando, uma aplicação do algoritmo de Karatsuba é na criptografia RSA (Rivest-Shamir-Adleman), um dos primeiros sistemas de criptografia de chave pública que é amplamente utilizado para transmissão segura de dados.
@@ -34,6 +31,8 @@ Espeficamente falando, uma aplicação do algoritmo de Karatsuba é na criptogra
 Mudando um pouco de área, Karatsuba também é usado no mundo da computação científica em áreas como dinâmica de fluidos computacional, em uma transformada de Fourier discreta (DFT), especialmente aquelas que são aplicadas em grids de alta resolução, a multiplicação de polinômios torna-se uma operação computacionalmente intensiva.
 
 Fique à vontade para pesquisar mais aplicações desse algoritmo. Sugiro começar por [aqui](https://dergipark.org.tr/en/download/article-file/2160206).
+:::
+
 
 ???
 
@@ -239,46 +238,143 @@ $$1461\cdot3521 = 4900000+242900+1281=5.144.181$$
 
 ## Cálculo de Complexidade
 
-Por fim, se tiver interesse em um cálculo detalhado da complexiade, vamos lhe apresentar exatamente a conta aqui. Não se preoucupe se tiver dificuldade de seguir a matemática, o foco do handout era o seu entendimento, em um nível mais alto, dos procedimentos do método de Karatsuba.
+Vamos deduzir a complexidade do algoritmo de Karatsuba.
 
-![Descrição da imagem](arvore_de_recursao.png)
+Apesar de ainda não saber o código do algoritmo de Karatsuba, vamos pensar sobre como a sua função seria estruturada. Até agora, vimos que:
+- o algoritmo realiza três multiplicações elementares.
+- a cada multiplicação elementar, dividimos o número principal em duas partes menores.
 
-O algoritmo de Karatsuba reduz uma multiplicação de n bits para três
-multiplicações de n/2 bits, que por sua vez são reduzidas a nove multiplicação de n/4 bits
-e assim por diante. Podemos representar o custo computacional de todas
-essas multiplicações em uma árvore ternária de profundidade log₂ n, onde na raiz
-o custo extra é cn operações, no primeiro nível o custo extra é c(n/2)
-operações, e em cada um dos nós $3^i$ do nível i, o custo extra é
-$c(n/2^i)$. O custo total é cn Σ de i=0 até log₂ n de $(3/2)^i$ ≤ 10cn $log₂^3$
-pela fórmula de soma de uma série geométrica.
+Como podemos modelar isso de forma recursiva?
 
-Cada nó no nível $i$ da árvore ternária representa o custo extra de $c \space (\frac{n}{2^i})$ operações, onde $c$ é uma constante que abrange as operações de adição e subtração necessárias para combinar os resultados das multiplicações. Em cada nível $i$ da árvore, temos $3^i$ nós, cada um com um custo extra de $c \space (\frac{n}{2^i})$ operações.
+Sendo $n$ o número de dígitos, vamos começar considerando um esqueleto de função da forma que aprendemos nas aulas de complexidade.
 
-Assim, o custo total $T(n)$ no nível $i$ é dado por:
+```c
+int karatsuba(int n) {
+  if (n <= 1) {
+    return;
+  }
+  for (int i = 0; i < n; i++) {
+    printf("questao1\n");
+  }
+  karatsuba(n / 2);
+  karatsuba(n / 2);
+  karatsuba(n / 2);
+}
+```
 
-$$T_i(n) = 3^i \cdot c \space (\frac{n}{2^i}) = 3^i \cdot \frac{c \cdot n}{2^i}$$
+Mas por que o loop for antes das chamadas recursivas? É porque, a cada recursão, é necessário saber a quantidade de dígitos do número.
 
-Portanto, o custo total em todos os níveis da árvore até a profundidade $\log_2 n$ é:
+```c
+int getSize(long num) {
+  int count = 0;
+  while (num > 0) {
+    count++;
+    num /= 10;
+  }
+  return count;
+}
+```
 
-$$T(n) = cn \cdot \sum_{i = 0}^{log_2 n} (\frac{3}{2})^i$$
+??? Checkpoint
+Considere a função `getSize` para calcular o número de dígitos do algoritmo de Karatsuba.
 
-Usando a fórmula da soma de uma série geométrica, onde a razão $r = \frac{3}{2}$ é maior que 1, podemos calcular a soma como:
+Qual é a complexidade dessa função? O que ela tem a ver com o esqueleto da função `karatsuba` que apresentei acima?
 
-$$cn \cdot \sum_{i = 0}^{log_2 n} (\frac{3}{2})^i = \frac{1 - (\frac{3}{2})^{log_2 \space n+1}}{1 - \frac{3}{2}}$$
+::: Gabarito
+$O(n).$ É por isso que incluímos um loop for no esqueleto.
+:::
+???
 
-Simplificando, isso se torna:
+Agora, vamos retomar a função esqueleto... ela é muito parecida com o que vimos em aula! Você se lembra das funções matemáticas que indicam o número de chamadas recursivas? Por exemplo:
 
-$$\frac{2 \left[1 - \left(\frac{3}{2} \right)^{\log_2 n + 1} \right]}{-\frac{1}{2}} = 2 \left[\left(\frac{3}{2} \right)^{\log_2 n + 1} - 1 \right]$$
+```txt
+         /
+        | 1              se n <= 1;
+f(n) = <
+        | n / 2          se n > 1.
+         \
 
-Como $\left(\frac{3}{2} \right)^{\log_2 n}$ é $n^{\log_2 \frac{3}{2}}$, temos:
+```
 
-$$T(n) = 2cn \left[n^{\log_2 \frac{3}{2}} - 1 \right] \approx 2cn \cdot n^{\log_2 \frac{3}{2}}$$
+??? Checkpoint
+Tente escrever agora, com base no esqueleto da função de Karatsuba, a função que indica o seu número de chamadas recursivas.
 
-Como $\log_2 \frac{3}{2} \approx 0.585$, a complexidade do algoritmo de Karatsuba é então:
+::: Gabarito
 
-$$T(n) = \Theta(n^{\log_2 3}) \approx \Theta(n^{1.585})$$
+```txt
+         /
+        | 1              se n <= 1;
+f(n) = <
+        | 3f(n/2) + n    se n > 1.
+         \
+```
 
-Isso mostra que o algoritmo de Karatsuba tem uma complexidade substancialmente menor do que a multiplicação tradicional, que é $\Theta(n^2)$, e explica por que ele é mais eficiente para números grandes.
+:::
+???
+
+??? Checkpoint
+Por fim, desenhe a árvore de complexidade.
+
+::: Gabarito
+
+<div style="display: flex; flex-direction: row; justify-content: center;">
+<img src="complexidade_karatsuba.drawio (1).png" />
+</div>
+
+:::
+???
+
+Sei que foi um longo caminho até aqui... obrigado por aguentar! Para finalizar...
+
+??? Checkpoint
+
+Seguindo o método que aprendemos em aula, calcule a complexidade do algoritmo de Karatsuba.
+
+::: Gabarito
+
+```txt
+/
+        | 1              se n <= 1;
+f(n) = <
+        | 3f(n/2) + n    se n > 1.
+         \
+
+
+Tamanho n divide por 2 a cada andar enquanto for maior que 1.
+No antepenúltimo andar (h-2), ainda não chegamos na base.
+n / 2^(h-2) > 1
+n > (2^h/4)
+2^h < 2n
+
+2^h = O(n), ou seja, 2^h <= c_x n
+
+Ao longo dos andares, temos
+(n + n3/2 + n9/4 + ... + n(3/2)^(h-2)) + 2^(h-1)
+
+Soma infinita
+- primeiro elemento n
+- razão 3/2
+- número de elementos h.
+
+n * ((3/2)^h - 1)/(3/2)-1)
+n * ((3/2)^h - 1)/(1/2)
+2n*((3/2)^h - 1)
+2n*(3/2)^h - 2n
+
+ Por mudança de base, temos
+ = 2n*(2^h)^log2(3/2) - 2n
+
+Como 2^h <= c_x n , 
+A complexidade é O(n^[log2(3/2)+1]).
+
+Observação: 
+  +1 porque o termo (2^h)^log2(3/2) é multiplicado por 2n; 
+  n*n^x = n^(x+1)
+```
+
+:::
+???
+
 
 ## Desafios
 
